@@ -77,23 +77,19 @@ class webApp:
             print('\r\nClosing program')
 
 class HolaApp():
-    def parse (self, request):
-            print("Soy la app que dice HOLA")
-            return 'El recurso que me han pedido va aqui'
     def process(self, parsedRequest):
             print('Me han llamado')
             return '200 OK', 'hola bro'
 
 class AdiosApp():
-    def parse (self, request):
-            print("Soy la app que dice ADIOS")
-            return 'El recurso que me han pedido va aqui'
     def process(self, parsedRequest):
             return '200 OK', '<html><body>adios bro</html></body>'
+
 class RequestFail():
     def process(self, request):
             print("El recurso no es válido")
-            return '200 OK', "<html><body>El recurso pedido no es valido. Prueba 'hola' o 'adios'</html></body>"
+            return '404 Not Found', "<!doctype html> <h1> 404 Not Found</h1><p>El recurso no es valido</p>"
+            
 if __name__ == "__main__":
     test1 = webApp("localhost", 1234)
     #lo que haya por debajo de test1 se ejecuta cuando se acabe el servidor
