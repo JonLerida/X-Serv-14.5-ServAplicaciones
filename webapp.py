@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 """
 webApp class
@@ -9,6 +9,8 @@ webApp class
  TSAI, SAT and SARO subjects (Universidad Rey Juan Carlos)
  October 2009 - February 2015
 """
+
+""" Aplicación que crea distintas apps en función del recurso que le pida el usuario"""
 
 import socket
 
@@ -23,8 +25,7 @@ class webApp:
 
     def parse(self, request):
         """Parse the received request, extracting the relevant information."""
-
-        return None
+        return request.split()[1][1:]
 
     def process(self, parsedRequest):
         """Process the relevant elements of the request.
@@ -32,7 +33,8 @@ class webApp:
         Returns the HTTP code for the reply, and an HTML page.
         """
 
-        return ("200 OK", "<html><body><h1>It works!</h1></body></html>")
+        return ("200 OK", "<html><body><h1>Hi!</h1></body></html>\r\n\r\n"+
+                parsedRequest)
 
     def __init__(self, hostname, port):
         """Initialize the web application."""
@@ -47,19 +49,51 @@ class webApp:
 
         # Accept connections, read incoming data, and call
         # parse and process methods (in a loop)
+        try:
+            while True:
+                print ('Waiting for connections')
+                (recvSocket, address) = mySocket.accept()
+                print ('HTTP request received (going to parse and process):')
+                request = recvSocket.recv(2048).decode('utf-8')
+                parsedRequest = self.parse(request)
+                recurso = parsedRequest
+                print ('Recurso pedido: ' + recurso)
+                if recurso == 'hola':
+                    hiApp = HolaApp()
+                    (returnCode, htmlAnswer) = hiApp.process(parsedRequest)
+                elif recurso == 'adios':
+                    byeApp = AdiosApp()
+                    (returnCode, htmlAnswer) = byeApp.process(parsedRequest)
+                else:
+                    badApp= RequestFail()
+                    (returnCode, htmlAnswer) = badApp.process(parsedRequest)
+                #(returnCode, htmlAnswer) = self.process(parsedRequest)
+                print ('Answering back...')
+                recvSocket.send(bytes("HTTP/1.1 " + returnCode + " \r\n\r\n"
+                                + htmlAnswer + "\r\n", 'utf-8'))
+                recvSocket.close()
+        except KeyboardInterrupt:
+            mySocket.close()
+            print('\r\nClosing program')
 
-        while True:
-            print 'Waiting for connections'
-            (recvSocket, address) = mySocket.accept()
-            print 'HTTP request received (going to parse and process):'
-            request = recvSocket.recv(2048)
-            print request
-            parsedRequest = self.parse(request)
-            (returnCode, htmlAnswer) = self.process(parsedRequest)
-            print 'Answering back...'
-            recvSocket.send("HTTP/1.1 " + returnCode + " \r\n\r\n"
-                            + htmlAnswer + "\r\n")
-            recvSocket.close()
+class HolaApp():
+    def parse (self, request):
+            print("Soy la app que dice HOLA")
+            return 'El recurso que me han pedido va aqui'
+    def process(self, parsedRequest):
+            print('Me han llamado')
+            return '200 OK', 'hola bro'
 
+class AdiosApp():
+    def parse (self, request):
+            print("Soy la app que dice ADIOS")
+            return 'El recurso que me han pedido va aqui'
+    def process(self, parsedRequest):
+            return '200 OK', '<html><body>adios bro</html></body>'
+class RequestFail():
+    def process(self, request):
+            print("El recurso no es válido")
+            return '200 OK', "<html><body>El recurso pedido no es valido. Prueba 'hola' o 'adios'</html></body>"
 if __name__ == "__main__":
-    testWebApp = webApp("localhost", 1234)
+    test1 = webApp("localhost", 1234)
+    #lo que haya por debajo de test1 se ejecuta cuando se acabe el servidor
